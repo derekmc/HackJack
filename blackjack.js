@@ -12,7 +12,7 @@ function Blackjack(){
     bj.message = "";
     bj.doubled = false;
     bj.dealt = false;
-    bj.handFinished = false;
+    bj.playerFinished = false;
 
     bj.deck = Deck().shuffle();
     bj.discard = Deck().clear();
@@ -86,11 +86,6 @@ function Blackjack(){
     bj.playerDeck.shuffle();
     bj.playerDiscard.clear();
   }
-  bj.dealerHit = ()=>{
-    if(!bj.deck.length) bj.shuffle();
-    let card = bj.deck.draw();
-    if(card >=0) bj.dealerCards.push(card);
-  }
   bj.copyState = ()=>{
     let other = BlackJack();
     other.bet = bj.bet;
@@ -116,35 +111,35 @@ function Blackjack(){
       bj.dealerScore = dealerScores[i]; }
     if(bj.dealerScore == 21 && bj.dealerCards.length == 2){
       bj.dealerScore = 21.5; } // blackjack!
-    console.log("Player Cards", bj.playerCards);
-    console.log("Dealer Cards", bj.dealerCards);
+    // console.log("Player Cards", bj.playerCards);
+    // console.log("Dealer Cards", bj.dealerCards);
   }
   bj.resolveHand = ()=>{
     if(!bj.dealt) throw new Error("Blackjack.resolveHand: cannot resolve hand before dealing.");
     bj.computeScores();
-    bj.message = "";
-    while(bj.dealerScore > 0 && bj.dealerScore < 17){
-      bj.dealerHit();
-      bj.computeScores(); }
+    //bj.message = "";
     let outcome = TIE;
     if(bj.playScore == 21.5){
       bj.message += "Blackjack!"
     }
     if(bj.playerScore >= 22){
-      bj.message += "You are busted. ";
       outcome = LOSS;
-    } else if(bj.playerScore > bj.dealerScore || bj.dealerScore >= 22){
+      bj.message += " You are busted. ";
+    } else if(bj.dealerScore >= 22){
+      outcome = WIN;
+      bj.message += " Dealer busted. ";
+    } else if(bj.playerScore > bj.dealerScore){
       outcome = WIN;
     } else if(bj.playerScore < bj.dealerScore){
       outcome = LOSS;
     }
     let bet = bj.bet * (bj.doubled? 2 : 1);
     if(outcome == WIN){
-      bj.message += ` You won the hand: +$${bet}`;
+      bj.message += ` You won the hand: +$${bet}.`;
       bj.money += bet;
     }
     if(outcome == LOSS){
-      bj.message += ` You lost the hand: -$${bet}`;
+      bj.message += ` You lost the hand: -$${bet}.`;
       bj.money -= bet;
     }
     if(outcome == TIE){
@@ -159,12 +154,13 @@ function Blackjack(){
   //
   bj.nextHand = ()=>{
     bj.doubled = false;
-    bj.handFinished = false;
+    bj.playerFinished = false;
     bj.dealt = false;
     bj.discard.append(bj.dealerCards);
     bj.playerDiscard.append(bj.playerCards);
     bj.dealerCards.length = 0;
     bj.playerCards.length = 0;
+    bj.message += " Next hand...";
   }
   bj.deal = ()=>{
     if(bj.dealt){
@@ -177,12 +173,24 @@ function Blackjack(){
     bj.computeScores();
     bj.message = "Cards have been dealt.";
   }
+  // returns true of 
+  bj.dealerHit = ()=>{
+    if(!bj.deck.length) bj.shuffle();
+    let card = bj.deck.draw();
+    if(card >=0) bj.dealerCards.push(card);
+    bj.computeScores();
+    if(bj.playerFinished){
+      bj.message = "Dealer drew " + Card(card) + "."; // + bj.dealerCards.length;
+      return bj.dealerScore >= 17;
+    }
+    return false;
+  }
   bj.hit = ()=>{
     console.log(' hit');
     if(!bj.dealt){
       bj.message = "You cannot 'hit' before the hand has been dealt.";
       return; }
-    if(bj.handFinished){
+    if(bj.playerFinished){
       bj.message = "Hand is already finished.";
       return; }
     if(!bj.playerDeck.length) bj.playerShuffle();
@@ -190,20 +198,20 @@ function Blackjack(){
     if(card >= 0) bj.playerCards.push(card);
     bj.computeScores();
     let score = bj.playerScore;
-    if(score == 0 || score >= 21){
-      bj.message = score >= 22? "You are busted." : "Hand Finished.";
-      bj.handFinished = true; }
+    if(score >= 21){
+      bj.message = score >= 22? "You are busted." : "Player Finished.";
+      bj.playerFinished = true; }
   }
   bj.stay = ()=>{
     console.log(' stay');
     if(!bj.dealt){
       bj.message = "You cannot 'stay' before the hand has been dealt.";
       return; }
-    if(bj.handFinished){
-      bj.message = "Hand is already finished.";
+    if(bj.playerFinished){
+      bj.message = "Player is already finished for this hand.";
       return; }
-    bj.handFinished = true;
-    bj.message = "Hand Finished.";
+    bj.playerFinished = true;
+    bj.message = "Player Stayed.";
   }
   bj.increaseBet = ()=>{
     if(bj.dealt){
@@ -229,13 +237,13 @@ function Blackjack(){
     if(!bj.dealt){
       bj.message = "You cannot 'double down' before the hand has been dealt.";
       return; }
-    if(bj.handFinished){
+    if(bj.playerFinished){
       bj.message = "Hand is already finished.";
       return; }
     bj.hit();
     bj.doubled = true;
-    bj.handFinished = true;
-    bj.message = "Hand Finished.";
+    bj.playerFinished = true;
+    bj.message = "Player Doubled Down.";
   }
   bj.split = ()=>{
     console.log(' split');

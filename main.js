@@ -51,7 +51,7 @@ function Display(){
     NotifyAppend("Remaing Cards: " + remaining.map(Card).join(", "));
   }
   NotifyAppend("Money: $" + numberCommas(BJ.money));
-  NotifyAppend("Bet: $" + numberCommas(BJ.bet) + (BJ.doubled? "(x2)": ""));
+  NotifyAppend("Bet: $" + numberCommas(BJ.bet) + (BJ.doubled? " (x2)": ""));
   NotifyAppend("Dealer: " + BJ.dealerCards.map(Card).join(", ") + (BJ.showHints && BJ.dealt? " (" + BJ.dealerScore + ")" : ""));
   NotifyAppend("Player: " + BJ.playerCards.map(Card).join(", ") + (BJ.showHints && BJ.dealt? " (" + BJ.playerScore + ")" : ""));
   if(BJ.message.length) NotifyAppend("\"" + BJ.message.trim() + "\"");
@@ -75,16 +75,18 @@ function Events(){
     }
     BJ.message = ""; // clear last message
     BJ[actions[button_text.trim()]]();
-    if(BJ.handFinished){
-      Display();
+    Display();
+    if(BJ.playerFinished){
       await Pause();
+      while(!BJ.dealerHit()){
+        Display();
+        await Pause(); }
       BJ.resolveHand();
+      //BJ.message;
       Display();
       await Pause();
       await Pause();
       BJ.nextHand();
-      Display();
-    } else {
       Display();
     }
   }
