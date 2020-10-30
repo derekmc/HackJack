@@ -1,0 +1,25 @@
+* {
+  font-family: sans-serif;
+  user-select: none;
+  line-height: 115%;
+  margin-bottom: 6px;
+}
+body{
+  margin: 1em;
+  overflow-x: hidden;
+}
+#notify_span{
+  display: inline-block;
+  margin: 1em;
+  border: 1px solid black;
+  padding: 1em 1.5em;
+}
+button{
+  border: none;
+  padding: 6px 18px;
+  background: black;
+  color: #fff;
+  font-size: larger;
+  outline: none;
+}
+
