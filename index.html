@@ -1,0 +1,318 @@
+<!doctype html>
+<html>
+  <head>
+    <title> HackJack </title>
+    <style>
+      * {
+        font-family: sans-serif;
+        user-select: none;
+        line-height: 115%;
+        margin-bottom: 6px;
+      }
+      body{
+        margin: 1em;
+        overflow-x: hidden;
+      }
+      #notify_span{
+        display: inline-block;
+        margin: 1em;
+        border: 1px solid black;
+        padding: 1em 1.5em;
+      }
+      button{
+        border: none;
+        padding: 6px 18px;
+        background: black;
+        color: #fff;
+        font-size: larger;
+        outline: none;
+      }
+    </style>
+
+
+    <!-- Utility Functions -->
+    <!-- These functions do general purpose things that aren't specific to this project or codebase -->
+    <script> 
+      function randint(i,j){
+        if(j === undefined){
+          j = i; i = 1; }
+        return i + Math.floor((j - i) * Math.random());
+      }
+      function numberCommas(x){
+        return ("" + x).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      }
+    </script>
+
+
+    <!-- Card Operations -->
+    <script>
+      // cards are typically an integer, but this turns that into a string.
+      function Card(card){
+        if(card < 0) return null;
+        let suit = "♡♤♧♢"[Math.floor(card/13)];
+        let rank = "A 2 3 4 5 6 7 8 9 10 J Q K".split(" ")[card%13];
+        return rank + suit;
+      }
+      function Deck(init){
+        let deck = [];
+        if(init){ for(let i=0; i<init.length; ++i){ deck[i] = init[i]; }}
+
+        deck.draw = (n)=>{
+          if(n === undefined) n = 1;
+          if(!deck.length) return -1;
+          if(n > deck.length) n = deck.length;
+          return deck.splice(0, n);
+        }
+        deck.shuffle = (start)=>{
+          let n = deck.length;
+          if(start === undefined){
+            start = 0; }
+          for(let i=start; i<n-1; ++i){
+            let j = randint(i, n);
+            let tempcard = deck[i];
+            // console.log('swap', deck[i], deck[j], i, j);
+            // console.log('deck', deck);
+            deck[i] = deck[j];
+            deck[j] = tempcard; }
+          return deck;
+        }
+        deck.discard = (n)=>{ // removes 'count' cards off the top.
+          return deck.splice(0, n);
+        }
+        deck.burn = (index)=>{ // removes the card at index
+          return deck.splice(index, 1)[0];
+        }
+        deck.clear = ()=>{
+          deck.length = 0;
+          return deck;
+        }
+
+        deck.append = (other)=>{
+          deck.push(...other);
+          return deck;
+        }
+        deck.mirror = (other)=>{  // make this deck exactly like other deck
+          deck.length = other.length;
+          for(let i=0; i<other.length; ++i){
+            deck[i] = other[i];
+          }
+          return deck;
+        }
+        deck.remove = (card)=>{ // removes the indicated card, returns the number removed
+          let n = 0;
+          for(let i=0; i<deck.length; ++i){
+            if(deck[i] == card){
+              deck.splice(i, 1)
+              --i; ++n;
+            }
+          }
+          return n;
+        }
+        deck.reset = ()=>{
+          deck.length = 52;
+          for(let i=0; i<52; ++i){
+            deck[i] = i; }
+          return deck;
+        }
+        deck.copy = ()=>{
+          return Deck(deck);
+        }
+        deck.reset();
+        return deck;
+      }
+    </script>
+    <script>
+      function Blackjack(){
+        // public fields
+        const MAXBET = 256 * 1000 * 1000;
+        let bj = blackjack = {
+          bet: 3,
+          money: 100,
+
+          deck: Deck().shuffle(),
+          discard: Deck().clear(),
+
+          playerDeck: null,
+          playerDiscard: null,
+
+          playerCards: [],
+          dealerCards: [],
+          showHints: true,
+        };
+
+        function points(card){
+          let value = card%13
+          if(value > 10) value = 10;
+          return value;
+        }
+
+        // player discard and deck is normally the same as other deck
+        bj.playerDeck = bj.deck;
+        bj.playerDiscard = bj.discard;
+        // private fields
+
+        // methods
+        bj.nextHand = ()=>{
+          bj.discard.append(bj.dealerCards);
+          bj.playerDiscard.append(bj.playerCards);
+          bj.dealerCards.length = 0;
+          bj.playerCards.length = 0;
+          bj.dealerHit();
+          bj.hit();
+          bj.hit();
+        }
+        bj.usePlayerDeck = ()=>{
+          bj.playerDeck = Deck().shuffle();
+          bj.playerDiscard = Deck().clear();
+        }
+
+        bj.shuffle = ()=>{
+          bj.deck.append(bj.discard);
+          bj.deck.shuffle();
+          bj.discard.clear();
+        }
+        bj.playerShuffle = ()=>{
+          bj.playerDeck.append(bj.playerDiscard);
+          bj.playerDeck.shuffle();
+          bj.playerDiscard.clear();
+        }
+        bj.dealerHit = ()=>{
+          if(!bj.deck.length) bj.shuffle();
+          let card = bj.deck.draw();
+          if(card >=0) bj.dealerCards.push(card);
+        }
+        bj.hit = ()=>{
+          console.log(' hit');
+          if(!bj.playerDeck.length) bj.playerShuffle();
+          let card = bj.playerDeck.draw();
+          if(card >= 0) bj.playerCards.push(card);
+        }
+        bj.stay = ()=>{
+          console.log(' stay');
+        }
+        bj.increaseBet = ()=>{
+          if(bj.bet < MAXBET && bj.bet < bj.money){
+            bj.bet *= 2;
+            if(bj.bet > 1000) bj.bet = 1000 * Math.floor(bj.bet/1000);
+            if(bj.bet > 1000 * 1000) bj.bet = 1000 * 1000 * Math.floor(bj.bet/1000/1000);
+            if(bj.bet > bj.money) bj.bet = bj.money;
+          }
+        }
+        bj.decreaseBet = ()=>{
+          if(bj.bet > 1){
+            bj.bet = Math.floor(bj.bet/2);
+          }
+        }
+        bj.doubleDown = ()=>{
+          console.log(' double down');
+        }
+        bj.split = ()=>{
+          console.log(' split');
+        }
+        bj.surrender = ()=>{
+          console.log(' surrender');
+        }
+        // TODO remove specified card from deck.
+        // bj.filter = ()=>{
+        // }
+        bj.copyState = ()=>{
+          let other = BlackJack();
+          other.bet = bj.bet;
+          other.money = bj.money;
+          other.playerDeck = bj.playerDeck? bj.playerDeck.copy() : null;
+          other.dealerDeck = bj.dealerDeck.copy();
+          other.showHints = bj.showHints;
+          return other;
+        }
+
+
+        return bj;
+      }
+    </script>
+
+    <script>
+      window.addEventListener("load", Init);
+      // Names that start with uppercase are globals or functions that modify globals.
+      let BjState, NotifySpan;
+
+      async function sleep(millis){
+        await new Promise((resolve)=> setTimeout(resolve, millis));
+      }
+      async function Init(){
+        BjState = Blackjack();
+        NotifySpan = document.getElementById("notify_span");
+        Events();
+        Notify("Shuffling deck...");
+        await sleep(800);
+        Notify("Deck: " + BjState.deck.map(Card).join(", "));
+        await sleep(800);
+        NotifyAppend("Init() completed.");
+        await sleep(800);
+        BjState.nextHand();
+        Display();
+      }
+      function NotifyClear(){
+        NotifySpan.innerHTML = "";
+      }
+      function NotifyAppend(msg){
+        if(NotifySpan.innerHTML.length){
+          NotifySpan.appendChild(document.createElement("br"));
+          NotifySpan.appendChild(document.createElement("br"));
+        }
+        NotifySpan.appendChild(document.createTextNode(msg));
+      }
+      function Notify(msg){
+        //console.log("Notification: " + msg);
+        NotifyClear();
+        NotifyAppend(msg);
+      }
+      function Display(){
+        NotifyClear();
+        NotifyAppend("Money: $" + numberCommas(BjState.money));
+        NotifyAppend("Bet: $" + numberCommas(BjState.bet));
+        NotifyAppend("Dealer: " + BjState.dealerCards.map(Card).join(", "));
+        NotifyAppend("Player: " + BjState.playerCards.map(Card).join(", "));
+      }
+      function Events(){
+        // window.addEventListener("click", (e)=>click(BjState, e));
+        window.addEventListener("keydown", (e)=> keyDown(BjState, e));
+        let buttons = document.getElementsByTagName("button"); 
+        for(let i in buttons){
+            let button = buttons[i];
+            let handler = ((button_text)=> ((event) => click(BjState, button_text)))(button.innerHTML); 
+            button.onclick = handler }
+        function click(state, button){
+          const actions = {
+            "Hit": "hit", "Stay": "stay", "Double Down": "doubleDown",
+            "Split": "split", "Surrender": "surrender",
+            "Increase Bet": "increaseBet",
+            "Decrease Bet": "decreaseBet",
+          }
+          BjState[actions[button.trim()]]();
+          Display();
+        }
+        function keyDown(state, e){
+          let keycode = e.keyCode;
+          state.lastkey = keycode;
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <h1> HackJack </h1>
+    <h3> Learn To Count Cards </h3>
+    <div>
+      <span id='notify_span'></span>
+    </div>
+    <!-- all buttons are auto-registered and called with the button text -->
+    <button>Increase Bet</button>
+    <button>Decrease Bet</button>
+    <br>
+    <button>Hit</button>
+    <button>Stay</button>
+    <button>Double Down</button>
+    <button>Split</button>
+    <button>Surrender</button>
+    <br>
+  </body>
+</html>
