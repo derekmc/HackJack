@@ -233,6 +233,7 @@ function Blackjack(){
       bj.message = "Hand is already finished.";
       return; }
     bj.hit();
+    bj.doubled = true;
     bj.handFinished = true;
     bj.message = "Hand Finished.";
   }
