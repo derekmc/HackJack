@@ -49,7 +49,6 @@ function Blackjack(){
           scores[j + n] = scores[j] + 11; }}
       for(let j=0; j<n; ++j){
         scores[j] += pts; }
-      // console.log("Cards, Scores", cards, scores);
     }
     return scores.sort((x, y) => x - y);
   }
@@ -143,7 +142,7 @@ function Blackjack(){
       bj.money -= bet;
     }
     if(outcome == TIE){
-      bj.message += " Tie.";
+      bj.message += " Push.";
     }
   }
 
@@ -186,7 +185,6 @@ function Blackjack(){
     return false;
   }
   bj.hit = ()=>{
-    console.log(' hit');
     if(!bj.dealt){
       bj.message = "You cannot 'hit' before the hand has been dealt.";
       return; }
@@ -203,7 +201,6 @@ function Blackjack(){
       bj.playerFinished = true; }
   }
   bj.stay = ()=>{
-    console.log(' stay');
     if(!bj.dealt){
       bj.message = "You cannot 'stay' before the hand has been dealt.";
       return; }
@@ -233,7 +230,6 @@ function Blackjack(){
     }
   }
   bj.doubleDown = ()=>{
-    console.log(' double down');
     if(!bj.dealt){
       bj.message = "You cannot 'double down' before the hand has been dealt.";
       return; }
@@ -246,11 +242,9 @@ function Blackjack(){
     bj.message = "Player Doubled Down.";
   }
   bj.split = ()=>{
-    console.log(' split');
     bj.message = "TODO: split";
   }
   bj.surrender = ()=>{
-    console.log(' surrender');
     bj.message = "TODO: surrender";
   }
   // TODO remove specified card from deck.
