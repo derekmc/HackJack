@@ -100,7 +100,7 @@ function Blackjack(){
     let playerScores = cardScores(bj.playerCards);
     let i = -1;
     bj.playerScore = playerScores[0];
-    while((playerScores[++i] < 21) && i < playerScores.length){
+    while((playerScores[++i] <= 21) && i < playerScores.length){
       bj.playerScore = playerScores[i]; }
     if(bj.playerScore == 21 && bj.playerCards.length == 2){
       bj.playerScore = 21.5; } // blackjack!
