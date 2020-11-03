@@ -8,17 +8,19 @@ let BJ, NotifySpan;
 async function Init(){
   BJ = Blackjack();
   NotifySpan = document.getElementById("notify_span");
+  NotifyClear();
   Events();
 
-  Notify("Shuffling deck...");
+  NotifyText("Shuffling deck...");
   await Pause();
 
   if(BJ.showHints){
-      NotifyAppend("Deck: " + BJ.deck.map(Card).join(", "));
+      NotifyText(BJ.deck.map(Card).join(", "));
+      await Pause();
       await Pause();
   }
   
-  NotifyAppend("Loading Blackjack table...");
+  NotifyText("Loading Blackjack table...");
   await Pause();
 
   BJ.nextHand();
@@ -27,34 +29,45 @@ async function Init(){
 function NotifyClear(){
   NotifySpan.innerHTML = "";
 }
-function NotifyAppend(msg){
+function NotifyHtml(html){
   if(NotifySpan.innerHTML.length){
     NotifySpan.appendChild(document.createElement("br"));
+    //NotifySpan.appendChild(document.createElement("br"));
+  }
+  let span = document.createElement("span");
+  span.innerHTML = html;
+  NotifySpan.appendChild(span);
+}
+function NotifyText(msg){
+  msg = msg? msg : "";
+  if(NotifySpan.innerHTML.length){
     NotifySpan.appendChild(document.createElement("br"));
+    //NotifySpan.appendChild(document.createElement("br"));
   }
   NotifySpan.appendChild(document.createTextNode(msg));
-}
-function Notify(msg){
-  //console.log("Notification: " + msg);
-  NotifyClear();
-  NotifyAppend(msg);
 }
 function Display(){
   NotifyClear();
   if(BJ.showHints){
-    let seen = BJ.discard.slice(0);
-    seen.push(...BJ.playerCards);
-    seen.push(...BJ.dealerCards);
-    seen.sort((x, y) => x - y);
-    NotifyAppend("Seen Cards: " + seen.map(Card).join(", "));
-    let remaining = BJ.deck.slice(0).sort((x, y)=> x - y);
-    NotifyAppend("Remaing Cards: " + remaining.map(Card).join(", "));
+    let drawnlist = BJ.discard.slice(0)
+    drawnlist.push(...BJ.playerCards);
+    drawnlist.push(...BJ.dealerCards);
+    let drawn = drawnlist.reduce((all, x)=>{ all[x] = true; return all;}, {});
+    let deck = Deck();
+    let op = (card) => {
+      return ((card in drawn)?
+               "<del>" + Card(card) + "</del>" : Card(card)) +
+             ((card%13 == 12 && card != 51)? "<br>" : "");
+    }
+    NotifyHtml(deck.map(op).join(" "));
+    NotifyText();
   }
-  NotifyAppend("Money: $" + numberCommas(BJ.money));
-  NotifyAppend("Bet: $" + numberCommas(BJ.bet) + (BJ.doubled? "(x2)": ""));
-  NotifyAppend("Dealer: " + BJ.dealerCards.map(Card).join(", ") + (BJ.showHints && BJ.dealt? " (" + BJ.dealerScore + ")" : ""));
-  NotifyAppend("Player: " + BJ.playerCards.map(Card).join(", ") + (BJ.showHints && BJ.dealt? " (" + BJ.playerScore + ")" : ""));
-  if(BJ.message.length) NotifyAppend("\"" + BJ.message.trim() + "\"");
+  NotifyText("Money: $" + numberCommas(BJ.money));
+  NotifyText("Bet: $" + numberCommas(BJ.bet) + (BJ.doubled? " (x2)": ""));
+  NotifyText("Dealer: " + BJ.dealerCards.map(Card).join(", ") + (BJ.showHints && BJ.dealt? " (" + BJ.dealerScore + ")" : ""));
+  NotifyText("Player: " + BJ.playerCards.map(Card).join(", ") + (BJ.showHints && BJ.dealt? " (" + BJ.playerScore + ")" : ""));
+  NotifyText();
+  if(BJ.message.length) NotifyText("\"" + BJ.message.trim() + "\"");
 }
 function Events(){
   // window.addEventListener("click", (e)=>click(BJ, e));
@@ -63,6 +76,7 @@ function Events(){
   for(let i in buttons){
       let button = buttons[i];
       let handler = ((button_text)=> ((event) => click(BJ, button_text)))(button.innerHTML); 
+      if(button.innerHTML == 'Restart') handler = Init;
       button.onclick = handler }
   async function click(state, button_text){
     const actions = {
@@ -71,20 +85,21 @@ function Events(){
       "Deal": "deal",
       "Hit": "hit", "Stay": "stay", "Double Down": "doubleDown",
       "Split": "split", "Surrender": "surrender",
-      "Restart": "restart",
     }
     BJ.message = ""; // clear last message
     BJ[actions[button_text.trim()]]();
-    if(BJ.handFinished){
-      Display();
+    Display();
+    if(BJ.playerFinished){
       await Pause();
+      while(!BJ.dealerHit()){
+        Display();
+        await Pause(); }
       BJ.resolveHand();
+      //BJ.message;
       Display();
       await Pause();
       await Pause();
       BJ.nextHand();
-      Display();
-    } else {
       Display();
     }
   }

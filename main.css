@@ -5,14 +5,19 @@
   margin-bottom: 6px;
 }
 body{
-  margin: 1em;
+  margin: 8px;
   overflow-x: hidden;
+  max-width: 600px;
+}
+del { 
+  background: #a44;
+  color: #a44;
 }
 #notify_span{
   display: inline-block;
-  margin: 1em;
+  margin: 3px;
   border: 1px solid black;
-  padding: 1em 1.5em;
+  padding: 12px 16px;
 }
 button{
   border: none;
@@ -21,5 +26,17 @@ button{
   color: #fff;
   font-size: larger;
   outline: none;
+}
+.square{
+  width: 80px;
+  height: 80px;
+}
+.black{
+  color: #fff;
+  background: #000;
+}
+.white{
+  color: #000;
+  background: #ff;
 }
 
