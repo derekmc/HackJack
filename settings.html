@@ -1,0 +1,52 @@
+<!doctype html>
+<html>
+  <head>
+    <title> HackJack </title>
+    <link rel="stylesheet" href="main.css"/>
+  </head>
+  <body>
+    <h1> HackJack Settings</h1>
+    <form>
+      <table border="2">
+        <tr>
+          <th>Number of Decks</th>
+          <td>
+            <input type="radio" name="inputDeckCount" id="radioquarterdeck" value="quarter"/>
+            <label for="radioquarterdeck">1/4 Deck</label>
+            <br>
+            <input type="radio" name="inputDeckCount" id="radioquarterdeck" value="half"/>
+            <label for="radiohalfdeck">1/2 Deck</label>
+            <br>
+            <input type="radio" checked name="inputDeckCount" id="radioquarterdeck" value="1"/>
+            <label for="radio1deck">1 Deck</label>
+            <br>
+            <input type="radio" name="inputDeckCount" id="radioquarterdeck" value="2"/>
+            <label for="radio2decks">2 Decks</label>
+            <br>
+            <input type="radio" name="inputDeckCount" id="radioquarterdeck" value="4"/>
+            <label for="radio4decks">4 Decks</label>
+          </td>
+        </tr>
+        <tr>
+          <th>
+            <label>Random Seed</label>
+          </th>
+          <td>
+            <input type="number" min="0" max="1000" step="1" value="69"></input>
+          </td>
+        </tr>
+        <tr>
+          <th> Game Type </th>
+          <td>
+            <input type="radio" name="gameType" checked id="radiopractice" value="practice"/>
+            <label for="radiohalfdeck">Practice (Hints)</label>
+            <br>
+            <input type="radio" name="gameType" id="radioplaygame" value="play"/>
+            <label for="radioplaygame">Play (No Hints)</label>
+          </td>
+        </tr>
+      </table>
+      <input type="submit" value="Save and Play"></input>
+    </form>
+  </body>
+</html>
